@@ -558,6 +558,7 @@ with st.expander("Expand to View Detailed Tables"):
         col.write(f"**{model} Model**")
         col.dataframe(model_df, hide_index=True)
 
+st.header("Visualizations")
 ## --- Line Chart: End Balance by Model, Year
 
 end_balance_chart_data = merged_df.pivot(
