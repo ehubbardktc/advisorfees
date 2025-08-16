@@ -154,8 +154,8 @@ with st.sidebar:
     st.markdown("---")
     st.header("5. Utilization")
     st.info("What percentage of years do you use each advisor model?")
-    perc_years_flatfee_util = st.number_input("Percentage of Years Flat Fee Advisor Used", value=0.50, step=0.05)
-    perc_years_hourlyfee_util = st.number_input("Percentage of Years Hourly Fee Advisor Used", value=0.50, step=0.05)
+    perc_years_flatfee_util = st.number_input("Percentage of Years Flat Fee Advisor Used", value=0.75, step=0.05)
+    perc_years_hourlyfee_util = st.number_input("Percentage of Years Hourly Fee Advisor Used", value=0.75, step=0.05)
 
     utilization_distribution = st.selectbox(
     "Active Utilization Years Spread (Relevant for Flat & Hourly Fee Only)",
@@ -481,14 +481,14 @@ with st.expander("Tabular View of Costs"):
     fig5 = go.Figure(data=[go.Table(
         header=dict(values=["Model"] + metrics,
                     fill_color="#333333",
-                    font=dict(color="white", size=24),
+                    font=dict(color="white", size=18),
                     align="center", 
-                    height = 40),
+                    height = 30),
         cells=dict(values=[models] + list(zip(*table_data)),
                 fill_color="#f5f5f5",
-                font=dict(color="black", size=22),
+                font=dict(color="black", size=16),
                 align="center",
-                height = 40))
+                height = 28))
     ])
     
     # Remove extra space around the table
@@ -548,13 +548,14 @@ for col, model in zip(cols, models):
 ## --- Display Data Tables for Each Model
 
 st.header("Detailed Year-by-Year Results")
-tables_cols = st.columns(3)
-for col, model in zip(tables_cols, ["AUM", "Flat Fee", "Hourly Fee"]):
-    model_df = merged_df[merged_df["Model"] == model].copy()
-    # Duplicative since there's a title for each
-    model_df = model_df.drop(columns=["Model", "Total Cost"])
-    col.write(f"**{model} Model**")
-    col.dataframe(model_df, hide_index=True)
+with st.expander("Expand to View Detailed Tables"):
+    tables_cols = st.columns(3)
+    for col, model in zip(tables_cols, ["AUM", "Flat Fee", "Hourly Fee"]):
+        model_df = merged_df[merged_df["Model"] == model].copy()
+        # Duplicative since there's a title for each
+        model_df = model_df.drop(columns=["Model", "Total Cost"])
+        col.write(f"**{model} Model**")
+        col.dataframe(model_df, hide_index=True)
 
 ## --- Line Chart: End Balance by Model, Year
 
