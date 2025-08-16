@@ -13,7 +13,7 @@ st.title("Advisor Fee Models' Impact on Fund Performance")
 
 st.expander("Welcome & Instructions", expanded=True).markdown(
     """
-    This dashboard demonstrates how different advisor fee models impact your portfolio over time.
+    This dashboard demonstrates how different advisor fee models impact your portfolio over time. Tables and visuals will update automatically with your selections.
 
     **Key Outputs:**
     - Year-by-year balances
@@ -21,6 +21,9 @@ st.expander("Welcome & Instructions", expanded=True).markdown(
     - Cumulative fees by type
 
     **How to use:**
+    
+    *If on mobile, select ">>" arrows in the top left to open selection pane*
+
     1. Set your initial balance, date range.
     2. Choose contribution parameters.
     3. State market & fund assumptions.
