@@ -55,7 +55,7 @@ with st.sidebar:
     st.info("Set your starting portfolio parameters and timeline.")
     initial_balance = st.number_input("Initial Balance ($)", value=250000, step=1000)
     start_year = st.number_input("Start Year", value=2025)
-    end_year = st.number_input("End Year", value=2055)
+    end_year = st.number_input("End Year", value=2070)
 
 
     st.markdown("---")
