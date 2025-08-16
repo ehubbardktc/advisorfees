@@ -481,7 +481,7 @@ with st.expander("Tabular View of Costs"):
     fig5 = go.Figure(data=[go.Table(
         header=dict(values=["Model"] + metrics,
                     fill_color="#333333",
-                    font=dict(color="white", size=16),
+                    font=dict(color="white", size=15),
                     align="center", 
                     height = 26),
         cells=dict(values=[models] + list(zip(*table_data)),
@@ -495,7 +495,7 @@ with st.expander("Tabular View of Costs"):
     fig5.update_layout(
         autosize = True,
         margin=dict(l=0, r=0, t=0, b=0),  # left, right, top, bottom
-        height=160
+        height=210
     )
 
     st.plotly_chart(fig5, use_container_width=True)
