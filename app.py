@@ -154,8 +154,8 @@ with st.sidebar:
     st.markdown("---")
     st.header("5. Utilization")
     st.info("What percentage of years do you use each advisor model?")
-    perc_years_flatfee_util = st.number_input("Percentage of Years Flat Fee Advisor Used", value=0.75, step=0.05)
-    perc_years_hourlyfee_util = st.number_input("Percentage of Years Hourly Fee Advisor Used", value=0.75, step=0.05)
+    perc_years_flatfee_util = st.number_input("Percentage of Years Flat Fee Advisor Used (%)", value=75, step=5, min_value = 0, max_value = 100) / 100
+    perc_years_hourlyfee_util = st.number_input("Percentage of Years Hourly Fee Advisor Used (%)", value=75, step=5, min_value = 0, max_value = 100) / 100
 
     utilization_distribution = st.selectbox(
     "Active Utilization Years Spread (Relevant for Flat & Hourly Fee Only)",
