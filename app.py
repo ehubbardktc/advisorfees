@@ -66,7 +66,7 @@ with st.sidebar:
     contribution_growth_rate = st.slider(
         "Annual Contribution Growth Rate (%)", 0.0, 10.0, value=3.0) / 100
     contribution_timing = st.selectbox("When do you contribute your funds?", [
-        "Beginning of Year", "Spread Evenly Over the Year", "End of Year"])
+        "Beginning of Year", "Spread Evenly Over the Year", "End of Year"], index = 1) #specifies even spread as default option
 
     st.markdown("---")
     st.header("3. Market & Fund Assumptions")
