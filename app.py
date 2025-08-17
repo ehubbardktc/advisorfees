@@ -266,17 +266,8 @@ def build_utilization(
 
 def apply_fee_by_frequency(annual_fee, balance, expense_ratio, frequency="Annual"):
     """
-    Calculates advisor fee and fund fee for a given period, supporting different advisor fee frequencies.
-    
-    Parameters:
-        annual_fee (float): total advisor fee per year
-        balance (float): current portfolio balance
-        expense_ratio (float): annual expense ratio of fund
-        frequency (str): "Annual", "Quarterly", or "Monthly"
-        
-    Returns:
-        advisor_fee (float): fee for the period based on frequency
-        fund_fee (float): fund expense fee applied with daily compounding
+    Calculates total annual advisor fee and fund fee for a given period,
+    supporting different advisor fee frequencies.
     """
     if frequency == "Annual":
         periods = 1
@@ -289,24 +280,19 @@ def apply_fee_by_frequency(annual_fee, balance, expense_ratio, frequency="Annual
 
     # Advisor fee distributed across periods
     advisor_fee_per_period = annual_fee / periods
+    advisor_fee_total = advisor_fee_per_period * periods  # sum back to full year
 
     # Fund fee: approximate daily compounding
     daily_expense_ratio = expense_ratio / 365
     fund_balance = balance
     fund_fee_total = 0
     for _ in range(periods):
-        # Approximate fund fee for the period
-        # Each period has (365 / periods) days
         days_in_period = 365 / periods
         fund_fee_period = fund_balance * (1 - (1 - daily_expense_ratio) ** days_in_period)
         fund_fee_total += fund_fee_period
-        # Update balance as fund fees reduce balance
-        fund_balance -= fund_fee_period
+        fund_balance -= fund_fee_period  # reduce balance for next period
 
-    # Total advisor fee for this period
-    advisor_fee = advisor_fee_per_period
-
-    return advisor_fee, fund_fee_total
+    return advisor_fee_total, fund_fee_total
 
 
 
@@ -318,25 +304,23 @@ def compute_avg_balance(balance, contribution, annual_fee, expense_ratio, freque
     """
     periods = {"Annual": 1, "Quarterly": 4, "Monthly": 12}[frequency]
     period_fee = annual_fee / periods
-    days_in_year = 365
-    daily_expense = expense_ratio / days_in_year
-
+    daily_expense = expense_ratio / 365
     balances = []
-    
-    for p in range(periods):
-        # Determine starting balance for this period
+
+    for _ in range(periods):
+        # Contribution allocation per period
         if contribution_timing == "Beginning of Year":
-            period_balance = balance + contribution
+            period_balance = balance + contribution / periods
         elif contribution_timing == "Spread Evenly Over the Year":
-            period_balance = balance + contribution / 2
+            period_balance = balance + contribution / (2 * periods)
         else:  # End of Year
             period_balance = balance
 
         # Apply proportional advisor fee
         period_balance -= period_fee
 
-        # Apply daily fund fee over the period
-        period_days = days_in_year / periods
+        # Apply daily fund fee for this period
+        period_days = 365 / periods
         period_balance_after_fund_fee = period_balance * ((1 - daily_expense) ** period_days)
 
         balances.append(period_balance_after_fund_fee)
@@ -395,10 +379,10 @@ def generate_all_model_projections(
                 aum_fee_info = calculate_aum_fee_by_tier(current_balance, edit_aum_tier_df)
                 annual_aum_fee = aum_fee_info["total_fee"]
                 advisor_fee, fund_fee = apply_fee_by_frequency(
-                    annual_fee=annual_aum_fee,
-                    balance=current_balance,
-                    expense_ratio=expense_ratio_aum,
-                    frequency=aum_fee_frequency
+                    annual_fee = annual_aum_fee,
+                    balance = current_balance,
+                    expense_ratio = expense_ratio_aum,
+                    frequency = aum_fee_frequency
                 )
                 advisor_fee *= active_flag
                 record.update({tier: fee * active_flag for tier, fee in aum_fee_info["breakdown"].items()})
