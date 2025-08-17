@@ -31,10 +31,11 @@ st.expander("Welcome & Instructions", expanded=True).markdown(
     5. Specify utilization of each model.
     6. Explore charts and tables to compare models. You may export table data, if desired.
 
-     **Note on Fund Fees:**  
-    Fund fees (expense ratios) are typically deducted daily by the fund itself.  
-    This means the fee compounds every day, not just once per year.  
-    As a result, changing the advisor fee frequency (annual, quarterly, monthly) **does not affect the fund fee**.
+    **Fee Methodology:**
+    
+    - **Fund Fees:** Applied daily, using daily compounding. This reflects how index funds or mutual funds deduct fees throughout the year.
+    - **Advisor Fees:** Applied based on selected frequency (Annual, Quarterly, Monthly).
+    - **Average Balance:** Calculated to reflect the impact of both advisor and fund fees throughout the year, ensuring effective fee rates align with actual deductions.
     """
 )
 
@@ -307,6 +308,43 @@ def apply_fee_by_frequency(annual_fee, balance, expense_ratio, frequency="Annual
 
     return advisor_fee, fund_fee_total
 
+
+
+def compute_avg_balance(balance, contribution, annual_fee, expense_ratio, frequency="Annual", contribution_timing="Spread Evenly Over the Year"):
+    """
+    Computes average balance for a year accounting for:
+    - Advisor fee frequency (annual, quarterly, monthly)
+    - Daily-compounded fund fee
+    """
+    periods = {"Annual": 1, "Quarterly": 4, "Monthly": 12}[frequency]
+    period_fee = annual_fee / periods
+    days_in_year = 365
+    daily_expense = expense_ratio / days_in_year
+
+    balances = []
+    
+    for p in range(periods):
+        # Determine starting balance for this period
+        if contribution_timing == "Beginning of Year":
+            period_balance = balance + contribution
+        elif contribution_timing == "Spread Evenly Over the Year":
+            period_balance = balance + contribution / 2
+        else:  # End of Year
+            period_balance = balance
+
+        # Apply proportional advisor fee
+        period_balance -= period_fee
+
+        # Apply daily fund fee over the period
+        period_days = days_in_year / periods
+        period_balance_after_fund_fee = period_balance * ((1 - daily_expense) ** period_days)
+
+        balances.append(period_balance_after_fund_fee)
+
+    avg_balance = sum(balances) / periods
+    return avg_balance
+
+
 # Main function: generates the projections for each model based on usage function outputs and other user inputs
 def generate_all_model_projections(
     initial_balance,
@@ -384,13 +422,15 @@ def generate_all_model_projections(
                 )
                 advisor_fee *= active_flag
 
-            # Contribution timing and interest
-            if contribution_timing == "Beginning of Year":
-                avg_balance = current_balance + contribution
-            elif contribution_timing == "Spread Evenly Over the Year":
-                avg_balance = current_balance + contribution / 2
-            else:
-                avg_balance = current_balance
+            # Calculating the average balance
+            avg_balance = compute_avg_balance(
+                balance = current_balance,
+                contribution = contribution,
+                annual_fee = advisor_fee,
+                expense_ratio = expense_ratio_aum if model == "AUM" else expense_ratio_flat if model == "Flat Fee" else expense_ratio_hourly,
+                frequency = aum_fee_frequency if model == "AUM" else flat_fee_frequency if model == "Flat Fee" else hourly_fee_frequency,
+                contribution_timing = contribution_timing
+            )
 
             total_cost = advisor_fee + fund_fee
             record.update({ # Adding fee-related columns to existing dictionary base
