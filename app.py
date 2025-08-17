@@ -45,6 +45,8 @@ aum_tier_df = pd.DataFrame({
     "Fee": [1.00, 0.75, 0.50, 0.25]
 })
 
+fee_frequency_options = ["Annual", "Quarterly", "Monthly"]
+
 # ------------------------------- UI SIDEBAR -------------------------------------------
 
 # Main UI sidebar
@@ -116,6 +118,8 @@ with st.sidebar:
         st.write(
             f"**AUM fees active for {len(aum_years)} years: {aum_years_range[0]} to {aum_years_range[1]}**")
         
+        aum_fee_frequency = st.selectbox("AUM Fee Frequency", fee_frequency_options, index=0,help="Choose how often AUM fees are charged.")
+        
         st.write("---")
         st.write("Update AUM Tier Structure, if desired:")
 
@@ -140,19 +144,19 @@ with st.sidebar:
             ),
         }
         )
-        
 
-    # Add in information icon @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@2
     # Show editable table to user
             
     with st.expander("Flat Fee Model Settings"):
         flat_fee = st.number_input("Flat Fee ($ per year)", value=3000, step=100)
         flat_fee_growth = st.number_input("Annual Flat Fee Growth (%)", value=3.0, step=0.1) / 100
+        flat_fee_frequency = st.selectbox("Flat Fee Frequency", fee_frequency_options, index=0, help="Choose how often the flat fee is charged.")
 
     with st.expander("Hourly Fee Model Settings"):
         hourly_fee = st.number_input("Hourly Rate ($)", value=250, step=10)
         hourly_fee_growth = st.number_input("Annual Hourly Rate Growth (%)", value=3.0, step=0.1) / 100
         hours_per_year = st.number_input("Hours per Year", value=15, step=1)
+        hourly_fee_frequency = st.selectbox("Hourly Fee Frequency", fee_frequency_options, index=0, help="Choose how often the hourly fee is charged.")
 
     st.markdown("---")
     st.header("5. Utilization")
