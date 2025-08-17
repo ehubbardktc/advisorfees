@@ -30,6 +30,11 @@ st.expander("Welcome & Instructions", expanded=True).markdown(
     4. Customize fee model details.
     5. Specify utilization of each model.
     6. Explore charts and tables to compare models. You may export table data, if desired.
+
+     **Note on Fund Fees:**  
+    Fund fees (expense ratios) are typically deducted daily by the fund itself.  
+    This means the fee compounds every day, not just once per year.  
+    As a result, changing the advisor fee frequency (annual, quarterly, monthly) **does not affect the fund fee**.
     """
 )
 
@@ -118,8 +123,6 @@ with st.sidebar:
         st.write(
             f"**AUM fees active for {len(aum_years)} years: {aum_years_range[0]} to {aum_years_range[1]}**")
         
-        aum_fee_frequency = st.selectbox("AUM Fee Frequency", fee_frequency_options, index=0,help="Choose how often AUM fees are charged.")
-        
         st.write("---")
         st.write("Update AUM Tier Structure, if desired:")
 
@@ -144,9 +147,9 @@ with st.sidebar:
             ),
         }
         )
+    
+        aum_fee_frequency = st.selectbox("AUM Fee Frequency", fee_frequency_options, index=0,help="Choose how often AUM fees are charged.")
 
-    # Show editable table to user
-            
     with st.expander("Flat Fee Model Settings"):
         flat_fee = st.number_input("Flat Fee ($ per year)", value=3000, step=100)
         flat_fee_growth = st.number_input("Annual Flat Fee Growth (%)", value=3.0, step=0.1) / 100
@@ -260,10 +263,19 @@ def build_utilization(
 
 # ------------------ Calculate fees based on frequency of charging by model ---------------------
 
-
-def apply_fee_by_frequency(annual_fee, balance, expense_ratio, frequency):
+def apply_fee_by_frequency(annual_fee, balance, expense_ratio, frequency="Annual"):
     """
-    Returns total advisor fee and fund fee adjusted for frequency
+    Calculates advisor fee and fund fee for a given period, supporting different advisor fee frequencies.
+    
+    Parameters:
+        annual_fee (float): total advisor fee per year
+        balance (float): current portfolio balance
+        expense_ratio (float): annual expense ratio of fund
+        frequency (str): "Annual", "Quarterly", or "Monthly"
+        
+    Returns:
+        advisor_fee (float): fee for the period based on frequency
+        fund_fee (float): fund expense fee applied with daily compounding
     """
     if frequency == "Annual":
         periods = 1
@@ -272,17 +284,28 @@ def apply_fee_by_frequency(annual_fee, balance, expense_ratio, frequency):
     elif frequency == "Monthly":
         periods = 12
     else:
-        periods = 1  # default to annual
+        periods = 1  # default to annual if unknown
 
-    # Fee per period
+    # Advisor fee distributed across periods
     advisor_fee_per_period = annual_fee / periods
-    fund_fee_per_period = balance * expense_ratio / periods
 
-    total_advisor_fee = advisor_fee_per_period * periods
-    total_fund_fee = fund_fee_per_period * periods
+    # Fund fee: approximate daily compounding
+    daily_expense_ratio = expense_ratio / 365
+    fund_balance = balance
+    fund_fee_total = 0
+    for _ in range(periods):
+        # Approximate fund fee for the period
+        # Each period has (365 / periods) days
+        days_in_period = 365 / periods
+        fund_fee_period = fund_balance * (1 - (1 - daily_expense_ratio) ** days_in_period)
+        fund_fee_total += fund_fee_period
+        # Update balance as fund fees reduce balance
+        fund_balance -= fund_fee_period
 
-    return total_advisor_fee, total_fund_fee
+    # Total advisor fee for this period
+    advisor_fee = advisor_fee_per_period
 
+    return advisor_fee, fund_fee_total
 
 # Main function: generates the projections for each model based on usage function outputs and other user inputs
 def generate_all_model_projections(
@@ -302,7 +325,10 @@ def generate_all_model_projections(
     util_df, # Contains the utilization of each model, by year, based on user input
     edit_aum_tier_df,
     flat_fee_growth,
-    hourly_fee_growth
+    hourly_fee_growth,
+    aum_fee_frequency,
+    flat_fee_frequency,
+    hourly_fee_frequency
 ):
     
     models = ["AUM", "Flat Fee", "Hourly Fee"]
@@ -329,16 +355,34 @@ def generate_all_model_projections(
             # Calculate fees
             if model == "AUM":
                 aum_fee_info = calculate_aum_fee_by_tier(current_balance, edit_aum_tier_df)
-                advisor_fee = aum_fee_info["total_fee"] * active_flag
-                fund_fee = current_balance * expense_ratio_aum
-                # Add tier breakdown directly into record
+                annual_aum_fee = aum_fee_info["total_fee"]
+                advisor_fee, fund_fee = apply_fee_by_frequency(
+                    annual_fee=annual_aum_fee,
+                    balance=current_balance,
+                    expense_ratio=expense_ratio_aum,
+                    frequency=aum_fee_frequency
+                )
+                advisor_fee *= active_flag
                 record.update({tier: fee * active_flag for tier, fee in aum_fee_info["breakdown"].items()})
+
             elif model == "Flat Fee":
-                advisor_fee = flat_fee * active_flag
-                fund_fee = current_balance * expense_ratio_flat
+                advisor_fee, fund_fee = apply_fee_by_frequency(
+                    annual_fee=flat_fee,
+                    balance=current_balance,
+                    expense_ratio=expense_ratio_flat,
+                    frequency=flat_fee_frequency
+                )
+                advisor_fee *= active_flag
+
             elif model == "Hourly Fee":
-                advisor_fee = hourly_fee * hours_per_year * active_flag
-                fund_fee = current_balance * expense_ratio_hourly
+                annual_hourly = hourly_fee * hours_per_year
+                advisor_fee, fund_fee = apply_fee_by_frequency(
+                    annual_fee=annual_hourly,
+                    balance=current_balance,
+                    expense_ratio=expense_ratio_hourly,
+                    frequency=hourly_fee_frequency
+                )
+                advisor_fee *= active_flag
 
             # Contribution timing and interest
             if contribution_timing == "Beginning of Year":
@@ -408,7 +452,10 @@ projected_df = generate_all_model_projections(
     util_df,
     edit_aum_tier_df,
     flat_fee_growth,
-    hourly_fee_growth
+    hourly_fee_growth,
+    aum_fee_frequency,
+    flat_fee_frequency,
+    hourly_fee_frequency
 )
 
 # ------------------------------------- MAIN DATAFRAME UPDATES -------------------------------------------
@@ -747,3 +794,24 @@ fig_diff.update_layout(
 )
 
 st.plotly_chart(fig_diff, use_container_width=True)
+
+
+
+# --------------- TEST CASES ------------------
+
+# Example inputs
+balance = 1_000_000
+expense_ratio = 0.01  # 1% annual fund fee
+annual_aum_fee = 10_000
+
+for freq in ["Annual", "Quarterly", "Monthly"]:
+    advisor_fee, fund_fee = apply_fee_by_frequency(
+        annual_fee=annual_aum_fee,
+        balance=balance,
+        expense_ratio=expense_ratio,
+        frequency=freq
+    )
+    print(f"Frequency: {freq}")
+    print(f"Advisor Fee: ${advisor_fee:,.2f}")
+    print(f"Fund Fee (daily compounding): ${fund_fee:,.2f}")
+    print("-" * 40)
