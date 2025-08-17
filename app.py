@@ -257,6 +257,33 @@ def build_utilization(
 
     return pd.concat([df_flat, df_hourly, df_aum], ignore_index=True)
 
+
+# ------------------ Calculate fees based on frequency of charging by model ---------------------
+
+
+def apply_fee_by_frequency(annual_fee, balance, expense_ratio, frequency):
+    """
+    Returns total advisor fee and fund fee adjusted for frequency
+    """
+    if frequency == "Annual":
+        periods = 1
+    elif frequency == "Quarterly":
+        periods = 4
+    elif frequency == "Monthly":
+        periods = 12
+    else:
+        periods = 1  # default to annual
+
+    # Fee per period
+    advisor_fee_per_period = annual_fee / periods
+    fund_fee_per_period = balance * expense_ratio / periods
+
+    total_advisor_fee = advisor_fee_per_period * periods
+    total_fund_fee = fund_fee_per_period * periods
+
+    return total_advisor_fee, total_fund_fee
+
+
 # Main function: generates the projections for each model based on usage function outputs and other user inputs
 def generate_all_model_projections(
     initial_balance,
