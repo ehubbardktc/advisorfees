@@ -9,7 +9,7 @@ import plotly.graph_objects as go
 # ----------------------------- SIDEBAR / USER INPUTS -----------------------------------
 st.set_page_config(page_title="Advisor Fee Model Comparison", layout="wide")
 
-st.title("Advisor Fee Models' Impact on Fund Performance")
+st.title("Advisor Fee Models' Impact on Portfolio Performance")
 
 st.expander("Welcome & Instructions", expanded=True).markdown(
     """
