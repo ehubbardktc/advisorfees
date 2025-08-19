@@ -152,7 +152,7 @@ with st.sidebar:
         aum_fee_frequency = st.selectbox("AUM Fee Frequency", fee_frequency_options, index=1,help="Choose how often AUM fees are charged.")
 
     with st.expander("Flat Fee Model Settings"):
-        flat_fee = st.number_input("Flat Fee ($ per year)", value=3000, step=100)
+        flat_fee = st.number_input("Flat Fee ($ per year)", value=4500, step=100)
         flat_fee_growth = st.number_input("Annual Flat Fee Growth (%)", value=3.0, step=0.1) / 100
         flat_fee_frequency = st.selectbox("Flat Fee Frequency", fee_frequency_options, index=1, help="Choose how often the flat fee is charged.")
 
