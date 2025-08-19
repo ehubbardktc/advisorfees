@@ -149,18 +149,18 @@ with st.sidebar:
         }
         )
     
-        aum_fee_frequency = st.selectbox("AUM Fee Frequency", fee_frequency_options, index=0,help="Choose how often AUM fees are charged.")
+        aum_fee_frequency = st.selectbox("AUM Fee Frequency", fee_frequency_options, index=1,help="Choose how often AUM fees are charged.")
 
     with st.expander("Flat Fee Model Settings"):
         flat_fee = st.number_input("Flat Fee ($ per year)", value=3000, step=100)
         flat_fee_growth = st.number_input("Annual Flat Fee Growth (%)", value=3.0, step=0.1) / 100
-        flat_fee_frequency = st.selectbox("Flat Fee Frequency", fee_frequency_options, index=0, help="Choose how often the flat fee is charged.")
+        flat_fee_frequency = st.selectbox("Flat Fee Frequency", fee_frequency_options, index=1, help="Choose how often the flat fee is charged.")
 
     with st.expander("Hourly Fee Model Settings"):
         hourly_fee = st.number_input("Hourly Rate ($)", value=250, step=10)
         hourly_fee_growth = st.number_input("Annual Hourly Rate Growth (%)", value=3.0, step=0.1) / 100
         hours_per_year = st.number_input("Hours per Year", value=15, step=1)
-        hourly_fee_frequency = st.selectbox("Hourly Fee Frequency", fee_frequency_options, index=0, help="Choose how often the hourly fee is charged.")
+        hourly_fee_frequency = st.selectbox("Hourly Fee Frequency", fee_frequency_options, index=2, help="Choose how often the hourly fee is charged.")
 
     st.markdown("---")
     st.header("5. Utilization")
@@ -750,7 +750,7 @@ fig3.update_layout(
     title_font=dict(
         color='black',
         size=28,
-    )       # Chart title
+    )
 )
 st.plotly_chart(fig3, use_container_width=True)
 
@@ -771,7 +771,7 @@ fig_eff_rate = px.line(
 
 fig_eff_rate.update_layout(
     title="   Effective Annual Fee Rate (Stepped)",
-    plot_bgcolor="rgb(245, 245, 245)",  # very light grey
+    plot_bgcolor="rgb(245, 245, 245)",  # light grey
     paper_bgcolor="rgb(245, 245, 245)",
     title_font_size=28,
     xaxis=dict(
